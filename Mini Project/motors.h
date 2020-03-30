@@ -5,7 +5,7 @@
 #define RIGHT_MOTOR_FORWARD	 	0		//PTD0 TPM0 CH0
 #define RIGHT_MOTOR_REVERSE		2		//PTD2 TPM0 CH2
 #define LEFT_MOTOR_FORWARD		3 	//PTD3 TPM0 CH3
-#define LEFT_MOTOR_REVERSE		1		//PTD1 TPM0 CH1
+#define LEFT_MOTOR_REVERSE		5		//PTD1 TPM0 CH1
 
 // PWM SETTINGS
 #define FAST 90		// Used when going forward
@@ -24,6 +24,7 @@
 #define	R_RIGHT			21
 
 #define MASK_ON(x)	(x & 0x1)
+#define MASK(x) (1 << (x)) 	
 
 void initMotors(void);
 

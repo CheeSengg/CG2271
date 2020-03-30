@@ -6,12 +6,26 @@
 #include  CMSIS_device_header
 #include "cmsis_os2.h"
 #include "motors.h"
+#include "uart.h"
+#include "sound.h"
+#include "led.h"
 
-#define UART_TX_PORTE22 22
-#define UART_RX_PORTE23 23
-#define BAUD_RATE 9600
-#define UART2_INT_PRIO 128
+#define MASK(x) (1 << (x)) 	
 
+int songz[47] = {E4, E4, F4, G4, G4, F4, E4, D4, Z4, Z4, D4, E4, E4, D4, D4, E4, E4, F4, G4, G4, F4, E4, D4, Z4, Z4, D4, E4, D4, Z4, Z4, 
+	D4, D4, E4, Z4, D4, E4, F4, E4, Z4, D4, E4, F4, E4, D4, Z4, D4, G3};
+
+int tracker[4] = {GREEN_LED_1, GREEN_LED_2, GREEN_LED_4, GREEN_LED_5};
+
+int redState = 0;
+int movementState = 0;
+
+osSemaphoreId_t movementSem;
+
+//----------------------------- FOR LED ------------------------
+
+
+//----------------------------- END LED -------------------------
 unsigned char rxData = 0x0;
 uint8_t volatile dir = 0;
 
@@ -21,38 +35,6 @@ const osThreadAttr_t thread_attr = {
 
 osEventFlagsId_t data_flag;
 osEventFlagsId_t dir_flag;
-
-/* Init UART2 */
-void initUART2(uint32_t baud_rate)
-{
-	uint32_t divisor, bus_clock;
-	SIM->SCGC4 |= SIM_SCGC4_UART2_MASK;
-	SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
-	
-	PORTE->PCR[UART_TX_PORTE22] &= ~PORT_PCR_MUX_MASK;
-	PORTE->PCR[UART_TX_PORTE22] |= PORT_PCR_MUX(4);
-	
-	PORTE->PCR[UART_RX_PORTE23] &= ~PORT_PCR_MUX_MASK;
-	PORTE->PCR[UART_RX_PORTE23] |= PORT_PCR_MUX(4);
-
-	UART2->C2 &= ~(UART_C2_RE_MASK);
-	
-	bus_clock = (DEFAULT_SYSTEM_CLOCK)/2;
-	divisor = bus_clock / (baud_rate * 16);
-	UART2->BDH = UART_BDH_SBR(divisor >> 8);
-	UART2->BDL = UART_BDL_SBR(divisor);
-	
-	UART2->C1 = 0;
-	UART2->S2 = 0;
-	UART2->C3 = 0;
-	
-	UART2->C2 |= ( (UART_C2_RE_MASK));
-	
-	NVIC_SetPriority(UART2_IRQn, 128);
-	NVIC_ClearPendingIRQ(UART2_IRQn);
-	NVIC_EnableIRQ(UART2_IRQn);
-	UART2->C2 |= UART_C2_RIE_MASK;
-}
 
 
 void UART2_IRQHandler(void) {
@@ -74,11 +56,15 @@ void tBrain (void *argument) {
 	for(;;) {
 		osEventFlagsWait(data_flag, 0x0002, osFlagsWaitAny, osWaitForever);
 		
+		osSemaphoreAcquire(movementSem, osWaitForever);
 		if (MASK_ON(rxData)) {
 			dir |= rxData;
+			movementState = 1;
 		} else {
 			dir &= ~rxData;
+			movementState = 0;
 		}
+		osSemaphoreRelease(movementSem);
 		
 		// can add more for like buzzers
 		osEventFlagsSet(dir_flag, 0x0001);
@@ -92,18 +78,67 @@ void tMotorControl (void *argument) {
 		move(dir);
 	}
 }
+
+void tmusicControl(void *argument){
+	for (;;){
+		for(int i=0; i<SONG_LENGTH; i+=1){
+			playSound(songz[i]);
+			osDelay(NOTE_LENGTH);
+			playSound(0);
+			osDelay(BEAT);
+		}
+	}
+}
+
+void tGreenLEDControl(void *argument){
+	for(;;){
+		osSemaphoreAcquire(movementSem, osWaitForever);
+		if(movementState){
+		for(int a=0; a<4; a++){
+			PTA->PDOR &= ~(MASK(GREEN_LED_1) | MASK(GREEN_LED_2) | MASK(GREEN_LED_4) | MASK(GREEN_LED_5));
+			PTA->PDOR |= MASK(tracker[a]);
+			osDelay(250);
+			if(!movementState){a=4;}
+			}
+		} else {
+		PTA->PDOR |= (MASK(GREEN_LED_1) | MASK(GREEN_LED_2) | MASK(GREEN_LED_4) | MASK(GREEN_LED_5));
+		}
+	}
+}
+
+void tRedLEDControl(void *argument){
+	for(;;){
+		osSemaphoreAcquire(movementSem, osWaitForever);
+		int redDelay = 0;
+		if(movementState){ redDelay = 250; } else { redDelay = 500;}
+		if(redState){
+		PTE->PDOR |= MASK(RED_LED);
+		redState = 0;
+		} else {
+		PTE->PDOR &= ~MASK(RED_LED);
+		redState = 1;
+		}
+		osDelay(redDelay);
+		osSemaphoreRelease(movementSem);
+	}
+}
  
 int main (void) {
  
   // System Initialization
   SystemCoreClockUpdate();
 	initMotors();
-	initUART2(BAUD_RATE);
-	
+	initUART2();
+	initPWM();
+	initLED();
+	movementSem = osSemaphoreNew(1,1, NULL);          //Semaphore
   // Initialize Kernal
   osKernelInitialize();                 						// Initialize CMSIS-RTOS
   osThreadNew(tBrain, NULL, &thread_attr);    			// Decoder Control		 
   osThreadNew(tMotorControl, NULL, &thread_attr); 	// Motor Control Task  
+	osThreadNew(tmusicControl, NULL, &thread_attr);
+	osThreadNew(tGreenLEDControl, NULL, &thread_attr);
+	osThreadNew(tRedLEDControl, NULL, &thread_attr);
 	osKernelStart();                      						// Start thread execution
   
 	for (;;) {
