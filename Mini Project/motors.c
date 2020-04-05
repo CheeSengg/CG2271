@@ -1,7 +1,6 @@
 #include "MKL25Z4.h"                    // Device header
 #include "motors.h"
 
-
 void initMotors(void) {
 
 	SIM_SCGC5 |= SIM_SCGC5_PORTD_MASK;

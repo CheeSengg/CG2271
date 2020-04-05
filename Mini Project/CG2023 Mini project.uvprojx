@@ -398,24 +398,14 @@
               <FilePath>.\motors.c</FilePath>
             </File>
             <File>
-              <FileName>redLed.h</FileName>
+              <FileName>ledControl.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\redLed.h</FilePath>
+              <FilePath>.\ledControl.h</FilePath>
             </File>
             <File>
-              <FileName>redLed.c</FileName>
+              <FileName>ledControl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\redLed.c</FilePath>
-            </File>
-            <File>
-              <FileName>greenLed.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\greenLed.h</FilePath>
-            </File>
-            <File>
-              <FileName>greenLed.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\greenLed.c</FilePath>
+              <FilePath>.\ledControl.c</FilePath>
             </File>
           </Files>
         </Group>
