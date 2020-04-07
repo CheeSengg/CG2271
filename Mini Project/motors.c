@@ -34,9 +34,9 @@ void initMotors(void) {
 	TPM0_C3SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
 	
 	TPM0_C2SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
-	TPM0_C1SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
+	TPM0_C5SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
 	TPM0_C2SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
-	TPM0_C1SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
+	TPM0_C5SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
 }
 
 int PWM(int duty_cycle){
@@ -48,11 +48,11 @@ void move(int dir) {
 			TPM0_C0V = PWM(FAST);				// RIGHT FORWARD
 			TPM0_C3V = PWM(FAST);				// LEFT FORWARD
 		} else if (dir == REVERSE) {
-			TPM0_C1V = PWM(FAST);				// LEFT REVERSE
+			TPM0_C5V = PWM(FAST);				// LEFT REVERSE
 			TPM0_C2V = PWM(FAST);				// RIGHT REVERSE
 		} else if (dir == LEFT) {
 			TPM0_C0V = PWM(SLOW);				// RIGHT FORWARD
-			TPM0_C1V = PWM(SLOW);				// LEFT	REVERSE
+			TPM0_C5V = PWM(SLOW);				// LEFT	REVERSE
 		} else if (dir == RIGHT) {
 			TPM0_C2V = PWM(SLOW);				// RIGHT REVERSE	
 			TPM0_C3V = PWM(SLOW);				// LEFT FORWARD
@@ -63,14 +63,14 @@ void move(int dir) {
 			TPM0_C0V = PWM(SLOW);				// RIGHT FORWARD
 			TPM0_C3V = PWM(FAST);				// LEFT FORWARD
 		} else if (dir == R_LEFT) {
-			TPM0_C1V = PWM(SLOW);				// LEFT REVERSE
+			TPM0_C5V = PWM(SLOW);				// LEFT REVERSE
 			TPM0_C2V = PWM(FAST);				// RIGHT REVERSE
 		} else if (dir == R_RIGHT) {
-			TPM0_C1V = PWM(FAST);				// LEFT REVERSE
+			TPM0_C5V = PWM(FAST);				// LEFT REVERSE
 			TPM0_C2V = PWM(SLOW);				// RIGHT REVERSE
 		} else {
 			TPM0_C0V = 0;
-			TPM0_C1V = 0;
+			TPM0_C5V = 0;
 			TPM0_C2V = 0;
 			TPM0_C3V = 0;
 		}
