@@ -21,10 +21,16 @@ const osThreadAttr_t thread_attr = {
 
 osEventFlagsId_t data_flag;						// To Run tBrain when new data is received
 osEventFlagsId_t dir_flag;						// To Run tControl after decoding of data
+osEventFlagsId_t special_event_flag;  // Special Event flag
 
 int songz[47] = {E4, E4, F4, G4, G4, F4, E4, D4, Z4, Z4, D4, E4, E4, D4, D4, E4, E4, F4, G4, G4, F4, E4, D4, Z4, Z4, D4, E4, D4, Z4, Z4, 
 	D4, D4, E4, Z4, D4, E4, F4, E4, Z4, D4, E4, F4, E4, D4, Z4, D4, G3};
 
+int connect_song[7] = {Z4, D4, E4, F4, G4, A5, B5};
+
+int ending_song[18] = {A4, A4, A4, F3, Z4, A4, F3, Z4, A4, E4, E4, E4, F4, Z4, AB4, F3, Z4, A4};
+	
+	
 void UART2_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(UART2_IRQn);
 	
@@ -65,7 +71,7 @@ void tLED (void *argument) {
 
 void tmusicControl(void *argument){
 	for (;;){
-		for(int i=0; i<SONG_LENGTH; i+=1){
+		for(int i=0; i<NORMAL_SONG_LENGTH; i+=1){
 			playSound(songz[i]);
 			osDelay(NOTE_LENGTH);
 			playSound(0);
@@ -98,6 +104,29 @@ void tMotorControl (void *argument) {
 		move(dir);
 	}
 }
+
+void tSpecailEvent (void *argument) {
+	//To control special events, e.g on connect or ending
+	for (;;) {
+		osEventFlagsWait(special_event_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		if(rxData == 27){
+		// for just connected
+			for(int i=0; i<CONNECT_SONG_LENGTH; i+=1){
+			playSound(songz[i]);
+			osDelay(NOTE_LENGTH);
+			playSound(0);
+			osDelay(BEAT);
+			}
+		} else if(rxData == 28) {
+			for(int i=0; i<ENDING_SONG_LENGTH; i+=1){
+			playSound(songz[i]);
+			osDelay(NOTE_LENGTH);
+			playSound(0);
+			osDelay(BEAT);
+			}
+		}
+	}
+}
  
 int main (void) {
  
@@ -112,6 +141,7 @@ int main (void) {
   osKernelInitialize();                 						// Initialize CMSIS-RTOS
 	dir_flag = osEventFlagsNew(NULL);
 	data_flag = osEventFlagsNew(NULL);
+	special_event_flag = osEventFlagsNew(NULL);
   osThreadNew(tBrain, NULL, &thread_attr);    			// Decoder Control		 
   osThreadNew(tMotorControl, NULL, &thread_attr); 	// Motor Control Task  
 	osThreadNew(tLED, NULL, NULL);										// LED Control Task
