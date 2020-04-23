@@ -51,11 +51,11 @@ void move(int dir) {
 			TPM0_C5V = PWM(FAST);				// LEFT REVERSE
 			TPM0_C2V = PWM(FAST);				// RIGHT REVERSE
 		} else if (dir == LEFT) {
-			TPM0_C0V = PWM(SLOW);				// RIGHT FORWARD
-			TPM0_C5V = PWM(SLOW);				// LEFT	REVERSE
+			TPM0_C0V = PWM(FAST);				// RIGHT FORWARD
+			TPM0_C5V = PWM(FAST);				// LEFT	REVERSE
 		} else if (dir == RIGHT) {
-			TPM0_C2V = PWM(SLOW);				// RIGHT REVERSE	
-			TPM0_C3V = PWM(SLOW);				// LEFT FORWARD
+			TPM0_C2V = PWM(FAST);				// RIGHT REVERSE	
+			TPM0_C3V = PWM(FAST);				// LEFT FORWARD
 		} else if (dir == F_LEFT) {
 			TPM0_C0V = PWM(FAST);				// RIGHT FORWARD
 			TPM0_C3V = PWM(SLOW);				// LEFT FORWARD
